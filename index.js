@@ -11,22 +11,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.get("/pizza?:ingredients", async(req,res)=>{
-    await mongoose.connect('mongodb://localhost/pizzaDb', {
-        useNewUrlParser: true,
-            useUnifiedTopology: true
-    })
-    console.log("asdasdasdas",req.params);
-    let data = await PizzaController.printAllPizzas();
-    res.json(data);
-})
-
 app.get("/pizza", async(req,res)=>{
     await mongoose.connect('mongodb://localhost/pizzaDb', {
         useNewUrlParser: true,
             useUnifiedTopology: true
     })
+    console.log(req.query)
     let data = await PizzaController.printAllPizzas();
+    if(req.query.ingredients){
+        let newData = [];
+        let options = req.query.ingredients.split(",");
+        console.log("options",options);
+        data.forEach(e => {
+            let hasAll = true;
+            options.forEach(query=>{
+                if(!e.ingredients.includes(query)) hasAll= false
+            })
+            if(hasAll) newData.push(e)
+        });
+        data = newData;
+    }  
+    console.log(data)
     res.json(data);
 })
 
@@ -41,13 +46,22 @@ app.get("/orderlist", async(req,res)=>{
 })
 
 
+app.get("/order/:id", async(req,res)=>{
+    await mongoose.connect('mongodb://localhost/pizzaDb', {
+        useNewUrlParser: true,
+            useUnifiedTopology: true
+    })
+    console.log(req.params.id)
+    let data = await OrderController.printOrderById(req.params.id);
+    res.json(data);
+})
+
 app.get("/order", async(req,res)=>{
     await mongoose.connect('mongodb://localhost/pizzaDb', {
         useNewUrlParser: true,
             useUnifiedTopology: true
     })
-    //await OrderController.addOrder();
-    let data = await OrderController.printAllOrderOrder();
+    let data = await OrderController.printAllOrder();
     res.json(data);
 })
 
